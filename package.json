@@ -1,5 +1,5 @@
 {
-  "name": "ssb-keys-mnemonic-neon",
+  "name": "ssb-keys",
   "version": "0.3.1-2",
   "description": "Rust-in-Node.js variant of ssb-keys-mnemonic",
   "main": "lib/index.js",
