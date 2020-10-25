@@ -1,0 +1,224 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up pnpm 5
+        uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.7.x
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: Compile .node
+        run: npm run build-debug
+
+      - name: Test
+        run: npm test
+
+  build-release:
+    name: Build release for Node
+    needs: test
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up pnpm 5
+        uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.7.x
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: Compile .node
+        run: npm run build-release
+
+      - name: Tag .node as prebuild
+        run: npm run tag-prebuild
+
+      - name: Upload prebuild artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: prebuilds
+          path: prebuilds/
+
+  build-release-electron:
+    name: Build release for Electron
+    needs: test
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        electron-version: [7, 8, 9, 10]
+        node-version: [12.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set up pnpm 5
+        uses: pnpm/action-setup@v1.2.0
+        with:
+          version: 5.7.x
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: Install Electron ${{ matrix.electron-version }}
+        run: pnpm install electron@${{ matrix.electron-version }}
+
+      - name: Compile .node
+        run: npm run build-release-electron
+
+      - name: Tag .node as prebuild
+        run: npm run tag-prebuild-electron
+
+      - name: Upload prebuild artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: prebuilds
+          path: prebuilds/
+
+  publish:
+    name: NPM Publish
+    needs: [build-release, build-release-electron]
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Download prebuild artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: prebuilds
+          path: prebuilds
+
+      - name: Check prebuilds
+        run: ls -laR prebuilds
+
+      - name: NPM Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  replace:
+    name: Update replacer branch
+    needs: [publish]
+    if: ${{ startsWith(github.event.head_commit.message, 'release') }}
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download prebuild artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: prebuilds
+          path: prebuilds
+
+      - name: Check prebuilds
+        run: ls -laR prebuilds
+
+      - name: Set package.json name to "ssb-keys"
+        run: node .github/set-pkg-replacer-name.js
+
+      - name: Detect version to replace
+        run: echo ::set-env name=BRANCH_VERSION::$(node .github/get-pkg-version.js)
+
+      - name: Delete git branch replace-${{ env.BRANCH_VERSION }}
+        uses: dawidd6/action-delete-branch@v3
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branches: replace-${{ env.BRANCH_VERSION }}
+
+      - name: Push git branch replace-${{ env.BRANCH_VERSION }}
+        uses: github-actions-x/commit@v2.7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'replace-${{ env.BRANCH_VERSION }}'
+          commit-message: 'update replacer branch'
+          force-add: 'true'
+          files: package.json prebuilds/
+          name: Andre Staltz
+          email: andre@staltz.com
