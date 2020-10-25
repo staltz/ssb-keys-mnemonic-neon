@@ -1,6 +1,6 @@
 {
   "name": "ssb-keys-mnemonic-neon",
-  "version": "0.3.1-2",
+  "version": "1.0.0-1",
   "description": "Rust-in-Node.js variant of ssb-keys-mnemonic",
   "main": "lib/index.js",
   "author": "Andre Staltz <andre@staltz.com>",
