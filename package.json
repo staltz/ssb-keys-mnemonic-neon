@@ -18,7 +18,7 @@
     "detect-libc": "~1.0.3",
     "electron-build-env": "~0.2.0",
     "neon-tag-prebuild": "^1.1.0",
-    "ssb-keys-mnemonic": "0.3.1",
+    "ssb-keys-mnemonic": "1.0.0",
     "ssb-keys": "staltz/ssb-keys-neon#replace-8.0.0",
     "tape": "^5.0.1"
   },
