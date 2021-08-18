@@ -424,20 +424,21 @@ checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 
 [[package]]
 name = "ssb-crypto"
-version = "0.2.1"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a055e461165ec87134bb33a521e7bb4e49f306ed14db31cab221dc649b2762a2"
 dependencies = [
- "base64 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "curve25519-dalek 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ed25519-dalek 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "hmac 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "sha2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "subtle 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "x25519-dalek 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "xsalsa20poly1305 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "zerocopy 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "zeroize 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64",
+ "curve25519-dalek",
+ "ed25519-dalek",
+ "hmac",
+ "rand",
+ "sha2",
+ "subtle",
+ "x25519-dalek",
+ "xsalsa20poly1305",
+ "zerocopy",
+ "zeroize",
 ]
 
 [[package]]
