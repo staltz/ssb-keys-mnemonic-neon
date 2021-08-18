@@ -136,4 +136,4 @@ As of `ssb-keys-mnemonic-neon@0.3.1-2`
 
 ## License
 
-AGPL-3.0
+LGPL-3.0
