@@ -40,13 +40,17 @@ pub fn neon_keys_to_words(mut cx: FunctionContext) -> JsResult<JsString> {
 
   let SecretKey(seed) = keypair.secret;
 
-  let mnemonic = Mnemonic::from_entropy(&seed, Language::English);
+  let mnemonic = Mnemonic::from_entropy_in(Language::English, &seed);
 
   if mnemonic.is_err() {
     return cx.throw_error("keysToWords failed to convert to a 24-word phrase");
   }
 
-  let phrase = mnemonic.unwrap();
+  let phrase = mnemonic
+    .unwrap()
+    .word_iter()
+    .collect::<Vec<&str>>()
+    .join(" ");
 
   Ok(cx.string(phrase))
 }

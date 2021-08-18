@@ -23,13 +23,13 @@ pub fn neon_words_to_keys(mut cx: FunctionContext) -> JsResult<JsObject> {
 
   let phrase = String::from(words_vec.join(" "));
 
-  let mnemonic = Mnemonic::from_phrase(phrase, Language::English);
+  let mnemonic = Mnemonic::parse_in(Language::English, phrase);
   if mnemonic.is_err() {
     return cx.throw_error("invalid words");
   }
   let mnemonic = mnemonic.unwrap();
 
-  let seed_bytes = mnemonic.entropy();
+  let seed_bytes = mnemonic.to_entropy();
 
   let keypair = Keypair::from_seed(&seed_bytes).or_throw(&mut cx, "invalid words")?;
 

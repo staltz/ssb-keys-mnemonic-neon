@@ -16,5 +16,5 @@ neon-build = "0.5.1"
 
 [dependencies]
 neon = "0.5.1"
-bip39 = "0.6.0-beta.1"
+bip39 = "1.0.1"
 ssb-crypto = "0.2.1"
